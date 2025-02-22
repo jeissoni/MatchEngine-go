@@ -13,6 +13,8 @@ Este proyecto implementa un motor de emparejamiento de órdenes en Go, diseñado
 
 ## Funcionamiento de los Heaps
 
+![heap](./Imagenes/heap.png)
+
 Este motor de emparejamiento utiliza heaps (`BuyHeap` y `SellHeap`) para mantener las órdenes ordenadas por precio, lo que permite un emparejamiento eficiente.
 
 ### ¿Qué es un Heap?
