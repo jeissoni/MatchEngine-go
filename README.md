@@ -131,20 +131,11 @@ En resumen, se han utilizado canales y mutexes para gestionar la concurrencia y 
 Para ejecutar las pruebas de carga:
 
 1.  Asegúrate de que la aplicación esté en ejecución.
-2.  Ejecuta el script de pruebas de carga:
+2.  Mover a la carpeta `Test`
+3.  Ejecuta el script de pruebas de carga:
+
+
 
     ```bash
-    go run load_test.go
+    go run main.go
     ```
-
-## Contribución
-
-Las contribuciones son bienvenidas. Si encuentras un error o tienes una sugerencia, por favor, abre un issue o envía un pull request.
-
-## Licencia
-
-Este proyecto está licenciado bajo la licencia MIT.
-
-## Contacto
-
-Si tienes alguna pregunta o comentario, no dudes en contactarme en <tu_correo_electrónico>.
