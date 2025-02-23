@@ -45,32 +45,50 @@ Un heap es una estructura de datos de árbol binario especializada que cumple co
 
 * **Eficiencia:** Los heaps permiten acceder rápidamente a la mejor orden de compra o venta disponible.
 * **Mantenimiento del Orden:** Los heaps mantienen automáticamente las órdenes ordenadas por precio.
-* **Complejidad:** Las operaciones de inserción y extracción en un heap tienen una complejidad de tiempo de O(log n), donde n es el número de elementos en el heap.
+* **Complejidad:** Las operaciones de inserción y extracción en un heap tienen una complejidad de tiempo de `O(log n)`, donde n es el número de elementos en el heap.
+
+![bigO](./Imagenes/bigO.png)
+
 
 En resumen, los heaps son una estructura de datos eficiente para mantener las órdenes ordenadas por precio y permitir un acceso rápido a las mejores órdenes disponibles.
 
-
 ## Concurrencia y Manejo de Bloqueos
 
-Este motor de emparejamiento está diseñado para manejar múltiples órdenes de forma concurrente, lo que requiere una gestión cuidadosa de los recursos compartidos para evitar condiciones de carrera y garantizar la integridad de los datos.
+Este motor de emparejamiento está diseñado para manejar múltiples órdenes de forma concurrente, lo que requiere una gestión cuidadosa de los recursos compartidos para evitar condiciones de carrera y garantizar la integridad de los datos. Para lograr esto, utilizamos dos mecanismos clave: canales y mutexes.
 
 ### Canales (`orderChannel`)
 
-* Se utiliza un canal (`orderChannel`) para recibir órdenes de forma asíncrona.
-* Las órdenes se envían al canal desde el handler de la API (`AddOrderHandler`).
-* Una goroutine separada (`processOrders`) consume las órdenes del canal y las agrega a los heaps correspondientes (`BuyHeap` o `SellHeap`).
-* El uso de un canal permite desacoplar la recepción de órdenes del procesamiento, lo que mejora la concurrencia y la capacidad de respuesta del motor.
+* **¿Qué son los canales?**
+    * En Go, los canales son conductos tipados a través de los cuales se pueden enviar y recibir valores. Son una herramienta fundamental para la comunicación entre goroutines (hilos ligeros).
+    * Los canales permiten que las goroutines se comuniquen de forma segura y sincrónica, evitando la necesidad de compartir memoria directamente.
+* **Uso en este proyecto:**
+    * Se utiliza un canal (`orderChannel`) para recibir órdenes de forma asíncrona. Esto significa que el servidor web (que recibe las órdenes a través de la API) no tiene que esperar a que las órdenes se procesen antes de continuar.
+    * Las órdenes se envían al canal desde el handler de la API (`AddOrderHandler`).
+    * Una goroutine separada (`processOrders`) consume las órdenes del canal y las agrega a los heaps correspondientes (`BuyHeap` o `SellHeap`).
+    * El uso de un canal permite desacoplar la recepción de órdenes del procesamiento, lo que mejora la concurrencia y la capacidad de respuesta del motor.
+* **Bondades de los canales:**
+    * **Comunicación segura:** Los canales garantizan que solo una goroutine acceda a los datos en un momento dado, evitando condiciones de carrera.
+    * **Sincronización:** Los canales pueden utilizarse para sincronizar goroutines, asegurando que ciertas operaciones se realicen en el orden correcto.
+    * **Desacoplamiento:** Los canales desacoplan los componentes de un sistema, lo que facilita el mantenimiento y la escalabilidad.
 
 ### Bloqueos (`sync.Mutex`)
 
-* Se utilizan mutexes (`buyMutex` y `sellMutex`) para proteger el acceso a los heaps (`BuyHeap` y `SellHeap`).
-* Los mutexes garantizan que solo una goroutine pueda acceder a un heap en un momento dado, lo que evita condiciones de carrera y asegura la integridad de los datos.
-* Los bloqueos se aplican en las siguientes operaciones:
-    * Inserción de órdenes en los heaps (`heap.Push`).
-    * Extracción de órdenes de los heaps (`heap.Pop`).
-    * Lectura y modificación de los heaps en la función `MatchOrders`.
-* La granularidad de los bloqueos se ha optimizado para minimizar el tiempo de bloqueo y maximizar la concurrencia.
-* Se ha tenido especial cuidado en desbloquear los mutexes en todos los casos, incluso en situaciones de error, para evitar bloqueos permanentes.
+* **¿Qué son los mutexes?**
+    * Un mutex (mutual exclusion) es un mecanismo de sincronización que permite proteger el acceso a recursos compartidos.
+    * Cuando una goroutine adquiere un mutex, ninguna otra goroutine puede acceder al recurso protegido hasta que el mutex se libere.
+* **Uso en este proyecto:**
+    * Se utilizan mutexes (`buyMutex` y `sellMutex`) para proteger el acceso a los heaps (`BuyHeap` y `SellHeap`).
+    * Los mutexes garantizan que solo una goroutine pueda acceder a un heap en un momento dado, lo que evita condiciones de carrera y asegura la integridad de los datos.
+    * Los bloqueos se aplican en las siguientes operaciones:
+        * Inserción de órdenes en los heaps (`heap.Push`).
+        * Extracción de órdenes de los heaps (`heap.Pop`).
+        * Lectura y modificación de los heaps en la función `MatchOrders`.
+    * La granularidad de los bloqueos se ha optimizado para minimizar el tiempo de bloqueo y maximizar la concurrencia.
+    * Se ha tenido especial cuidado en desbloquear los mutexes en todos los casos, incluso en situaciones de error, para evitar bloqueos permanentes.
+* **Bondades de los mutexes:**
+    * **Protección de recursos compartidos:** Los mutexes evitan que múltiples goroutines accedan a un recurso compartido simultáneamente, lo que podría corromper los datos.
+    * **Prevención de condiciones de carrera:** Los mutexes eliminan las condiciones de carrera, que son situaciones en las que el resultado de un programa depende del orden de ejecución de las goroutines.
+    * **Garantía de integridad de datos:** Los mutexes aseguran que los datos compartidos se mantengan en un estado consistente.
 
 ### Gestión de la Concurrencia en `MatchOrders`
 
@@ -80,6 +98,11 @@ Este motor de emparejamiento está diseñado para manejar múltiples órdenes de
 * Se ha implementado una lógica para manejar órdenes parciales (órdenes con cantidades restantes) y volver a insertarlas en los heaps.
 
 En resumen, se han utilizado canales y mutexes para gestionar la concurrencia y los bloqueos de forma eficiente, lo que garantiza la integridad de los datos y el rendimiento del motor de emparejamiento.
+
+## Video 
+
+https://1drv.ms/v/c/f2796b43dcec1080/EcKdv-2759dCr1tCYSJnC_oB2CoZkjhmQdxQehvzZW-MlQ?e=xrEaX5
+
 
 ## Requisitos
 
